@@ -63,7 +63,7 @@ transaction_processing_api/
 ### 1. Clone Repository
 
 ```bash
-git clone
+git clone https://github.com/Abhiram-TK/transaction_processing_api
 ```
 
 ### 2. Navigate Into Project
