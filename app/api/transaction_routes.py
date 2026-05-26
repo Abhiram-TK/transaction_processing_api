@@ -1,12 +1,14 @@
 import time
 
-from fastapi import (APIRouter, HTTPException, Request, Response, status, Depends, Header)
-
-from app.operations.transaction_ops import (create_transaction, get_all_transactions, get_transaction_by_id, update_transactions)
-
 from sqlalchemy.orm import Session
 
 from app.database.connection import get_db
+
+from app.events.event_emitter import emit_event
+
+from fastapi import (APIRouter, HTTPException, Request, Response, status, Depends, Header)
+
+from app.operations.transaction_ops import (create_transaction, get_all_transactions, get_transaction_by_id, update_transactions)
 
 processed_requests = {}
 
@@ -58,6 +60,8 @@ def create_transaction_route(request: Request, response: Response, customer_name
     try:
 
         transaction = create_transaction(db, customer_name, invoice_number, amount, status)
+
+        emit_event(event_name="TRANSACTION_CREATED", payload={"transaction_id": transaction.id, "invoice_number": transaction.invoice_number, "amount": transaction.amount})
 
         processed_requests[idempotency_key] = transaction
 
