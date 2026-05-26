@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Response, Header
 from fastapi import Depends
 from fastapi import HTTPException, status
 
@@ -10,14 +10,22 @@ from sqlalchemy.orm import Session
 
 from app.database.connection import get_db
 
+processed_requests = {}
+
 router = APIRouter()
 
 @router.post("/transactions",status_code=status.HTTP_201_CREATED)
-def create_transaction_route(customer_name: str, invoice_number: str, amount: float, status: str, db: Session = Depends(get_db)):
+def create_transaction_route(customer_name: str, invoice_number: str, amount: float, status: str, idempotency_key: str = Header(...), db: Session = Depends(get_db)):
+
+    if idempotency_key in processed_requests:
+
+        return processed_requests[idempotency_key]
 
     try:
 
         transaction = create_transaction(db, customer_name, invoice_number, amount, status)
+
+        processed_requests[idempotency_key] = transaction
 
         return transaction
     
