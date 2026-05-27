@@ -6,6 +6,8 @@ from app.database.connection import get_db
 
 from app.events.event_emitter import emit_event
 
+from app.schemas.transaction_schema import TransactionCreate, TransactionUpdate
+
 from fastapi import (APIRouter, HTTPException, Request, Response, status, Depends, Header)
 
 from app.operations.transaction_ops import (create_transaction, get_all_transactions, get_transaction_by_id, update_transactions)
@@ -20,7 +22,7 @@ TIME_WINDOW = 60
 router = APIRouter()
 
 @router.post("/transactions",status_code=status.HTTP_201_CREATED)
-def create_transaction_route(request: Request, response: Response, customer_name: str, invoice_number: str, amount: float, status: str, idempotency_key: str = Header(...), 
+def create_transaction_route(request: Request, response: Response, transaction: TransactionCreate, idempotency_key: str = Header(...), 
                              db: Session = Depends(get_db)):
     
     client_ip = request.client.host
@@ -59,7 +61,7 @@ def create_transaction_route(request: Request, response: Response, customer_name
 
     try:
 
-        transaction = create_transaction(db, customer_name, invoice_number, amount, status)
+        transaction = create_transaction(db, transaction.customer_name, transaction.invoice_number, transaction.amount, transaction.status)
 
         emit_event(event_name="TRANSACTION_CREATED", payload={"transaction_id": transaction.id, "invoice_number": transaction.invoice_number, "amount": transaction.amount})
 
@@ -92,9 +94,9 @@ def fetch_transaction(transaction_id: int, db: Session = Depends(get_db)):
     return transaction
 
 @router.put("/transactions/{transaction_id}")
-def update_transaction_route(transaction_id: int, customer_name: str, amount: float, status: str, db: Session = Depends(get_db)):
+def update_transaction_route(transaction_id: int, transaction_update: TransactionUpdate, db: Session = Depends(get_db)):
 
-    transaction = update_transactions(db, transaction_id, customer_name, amount, status)
+    transaction = update_transactions(db, transaction_id, transaction_update.customer_name, transaction_update.amount, transaction_update.status)
 
     if not transaction: 
 
