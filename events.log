@@ -17,3 +17,9 @@ EVENT EMITTED
 Time: 2026-05-27 05:17:23.662576
 Event: TRANSACTION_CREATED
 Payload: {'transaction_id': 15, 'invoice_number': 'INV-9999', 'amount': Decimal('5000.0')}
+
+EVENT EMITTED
+
+Time: 2026-05-27 09:16:29.774064
+Event: TRANSACTION_CREATED
+Payload: {'transaction_id': 16, 'invoice_number': 'INV-9555', 'amount': Decimal('7000.0')}

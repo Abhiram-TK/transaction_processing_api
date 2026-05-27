@@ -1,5 +1,8 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
+
 from typing import Optional
+
+from datetime import datetime
 
 class TransactionCreate(BaseModel):
 
@@ -21,3 +24,13 @@ class TransactionUpdate(BaseModel):
 
     status: Optional[str] = Field(None, min_length=2)
 
+class TransactionResponse(BaseModel):
+
+    id: int
+    customer_name: str
+    invoice_number: str
+    amount: float
+    status: str
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

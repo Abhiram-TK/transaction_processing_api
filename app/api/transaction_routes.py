@@ -6,9 +6,9 @@ from app.database.connection import get_db
 
 from app.events.event_emitter import emit_event
 
-from app.schemas.transaction_schema import TransactionCreate, TransactionUpdate
-
 from fastapi import (APIRouter, HTTPException, Request, Response, status, Depends, Header)
+
+from app.schemas.transaction_schema import TransactionCreate, TransactionUpdate, TransactionResponse
 
 from app.operations.transaction_ops import (create_transaction, get_all_transactions, get_transaction_by_id, update_transactions)
 
@@ -21,7 +21,7 @@ TIME_WINDOW = 60
 
 router = APIRouter()
 
-@router.post("/transactions",status_code=status.HTTP_201_CREATED)
+@router.post("/transactions",status_code=status.HTTP_201_CREATED, response_model=TransactionResponse)
 def create_transaction_route(request: Request, response: Response, transaction: TransactionCreate, idempotency_key: str = Header(...), 
                              db: Session = Depends(get_db)):
     
@@ -73,7 +73,7 @@ def create_transaction_route(request: Request, response: Response, transaction: 
 
         raise HTTPException(status_code=500, detail="Database operation failed")
 
-@router.get("/transactions")
+@router.get("/transactions", response_model=list[TransactionResponse])
 def fetch_all_transactions(response: Response, skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
 
     response.headers["X-API-Version"] = "1.0"
@@ -82,7 +82,7 @@ def fetch_all_transactions(response: Response, skip: int = 0, limit: int = 10, d
 
     return transactions
 
-@router.get("/transactions/{transaction_id}")
+@router.get("/transactions/{transaction_id}", response_model=TransactionResponse)
 def fetch_transaction(transaction_id: int, db: Session = Depends(get_db)):
 
     transaction = get_transaction_by_id(db, transaction_id)
@@ -93,7 +93,7 @@ def fetch_transaction(transaction_id: int, db: Session = Depends(get_db)):
 
     return transaction
 
-@router.put("/transactions/{transaction_id}")
+@router.put("/transactions/{transaction_id}", response_model=TransactionResponse)
 def update_transaction_route(transaction_id: int, transaction_update: TransactionUpdate, db: Session = Depends(get_db)):
 
     transaction = update_transactions(db, transaction_id, transaction_update.customer_name, transaction_update.amount, transaction_update.status)
