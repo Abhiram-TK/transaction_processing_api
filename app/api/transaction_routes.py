@@ -1,16 +1,14 @@
 import time
+from datetime import datetime
 
 from sqlalchemy.orm import Session
 
 from app.database.connection import get_db
-
 from app.events.event_emitter import emit_event
+from app.operations.transaction_ops import (create_transaction, get_all_transactions, get_transaction_by_id, update_transactions)
+from app.schemas.transaction_schema import (TransactionCreate, TransactionUpdate, TransactionResponse, TransactionMetadata, TransactionDetailedResponse)
 
 from fastapi import (APIRouter, HTTPException, Request, Response, status, Depends, Header)
-
-from app.schemas.transaction_schema import TransactionCreate, TransactionUpdate, TransactionResponse
-
-from app.operations.transaction_ops import (create_transaction, get_all_transactions, get_transaction_by_id, update_transactions)
 
 processed_requests = {}
 
@@ -82,7 +80,7 @@ def fetch_all_transactions(response: Response, skip: int = 0, limit: int = 10, d
 
     return transactions
 
-@router.get("/transactions/{transaction_id}", response_model=TransactionResponse)
+@router.get("/transactions/{transaction_id}", response_model=TransactionDetailedResponse)
 def fetch_transaction(transaction_id: int, db: Session = Depends(get_db)):
 
     transaction = get_transaction_by_id(db, transaction_id)
@@ -91,7 +89,7 @@ def fetch_transaction(transaction_id: int, db: Session = Depends(get_db)):
 
         raise HTTPException(status_code=404, detail="Transaction not found")
 
-    return transaction
+    return {"transaction": transaction, "metadata": {"api_version": "1.0", "processed_by": "FastAPI Transaction Service", "timestamp": datetime.utcnow()}}
 
 @router.put("/transactions/{transaction_id}", response_model=TransactionResponse)
 def update_transaction_route(transaction_id: int, transaction_update: TransactionUpdate, db: Session = Depends(get_db)):
