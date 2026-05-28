@@ -7,6 +7,7 @@ from app.database.connection import get_db
 from app.events.event_emitter import emit_event
 from app.operations.transaction_ops import (create_transaction, get_all_transactions, get_transaction_by_id, update_transactions)
 from app.schemas.transaction_schema import (TransactionCreate, TransactionUpdate, TransactionResponse, TransactionMetadata, TransactionDetailedResponse)
+from app.middleware.auth_middleware import get_current_user
 
 from fastapi import (APIRouter, HTTPException, Request, Response, status, Depends, Header)
 
@@ -21,7 +22,7 @@ router = APIRouter()
 
 @router.post("/transactions",status_code=status.HTTP_201_CREATED, response_model=TransactionResponse)
 def create_transaction_route(request: Request, response: Response, transaction: TransactionCreate, idempotency_key: str = Header(...), 
-                             db: Session = Depends(get_db)):
+                             db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     
     client_ip = request.client.host
 
@@ -72,7 +73,7 @@ def create_transaction_route(request: Request, response: Response, transaction: 
         raise HTTPException(status_code=500, detail="Database operation failed")
 
 @router.get("/transactions", response_model=list[TransactionResponse])
-def fetch_all_transactions(response: Response, skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+def fetch_all_transactions(response: Response, skip: int = 0, limit: int = 10, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
 
     response.headers["X-API-Version"] = "1.0"
 
@@ -81,7 +82,7 @@ def fetch_all_transactions(response: Response, skip: int = 0, limit: int = 10, d
     return transactions
 
 @router.get("/transactions/{transaction_id}", response_model=TransactionDetailedResponse)
-def fetch_transaction(transaction_id: int, db: Session = Depends(get_db)):
+def fetch_transaction(transaction_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
 
     transaction = get_transaction_by_id(db, transaction_id)
 
@@ -92,7 +93,7 @@ def fetch_transaction(transaction_id: int, db: Session = Depends(get_db)):
     return {"transaction": transaction, "metadata": {"api_version": "1.0", "processed_by": "FastAPI Transaction Service", "timestamp": datetime.utcnow()}}
 
 @router.put("/transactions/{transaction_id}", response_model=TransactionResponse)
-def update_transaction_route(transaction_id: int, transaction_update: TransactionUpdate, db: Session = Depends(get_db)):
+def update_transaction_route(transaction_id: int, transaction_update: TransactionUpdate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
 
     transaction = update_transactions(db, transaction_id, transaction_update.customer_name, transaction_update.amount, transaction_update.status)
 
