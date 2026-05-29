@@ -12,6 +12,9 @@ from app.services.rbac_service import RoleChecker
 
 from fastapi import (APIRouter, HTTPException, Request, Response, status, Depends, Header)
 
+from app.core.logger import logger
+
+
 processed_requests = {}
 
 request_tracker = {}
@@ -70,9 +73,12 @@ def create_transaction_route(request: Request, response: Response, transaction: 
 
         return transaction
     
-    except Exception:
+    except Exception as e:
+
+        logger.error(f"Transaction creation failed: {str(e)}")
 
         raise HTTPException(status_code=500, detail="Database operation failed")
+        
 
 @router.get("/transactions", response_model=list[TransactionResponse], dependencies=[Depends(RoleChecker(["admin", "recruiter", "viewer"]))])
 

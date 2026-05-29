@@ -2,6 +2,8 @@ from fastapi import (Depends, HTTPException, status)
 
 from app.middleware.auth_middleware import (get_current_user)
 
+from app.core.logger import logger
+
 
 class RoleChecker:
 
@@ -14,6 +16,8 @@ class RoleChecker:
         user_role = current_user.get("role")
 
         if user_role not in self.allowed_roles:
+
+            logger.error(f"RBAC denied role: {user_role}")
 
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
 
