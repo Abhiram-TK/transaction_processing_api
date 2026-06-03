@@ -26,7 +26,7 @@ def validate_transaction(transaction_id):
 
             validation_passed = False
 
-        if not transaction.customer_id:
+        if not transaction.customer_name:
 
             validation_passed = False
 

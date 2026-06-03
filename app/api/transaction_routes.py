@@ -9,6 +9,7 @@ from app.operations.transaction_ops import (create_transaction, get_all_transact
 from app.schemas.transaction_schema import (TransactionCreate, TransactionUpdate, TransactionResponse, TransactionMetadata, TransactionDetailedResponse)
 from app.middleware.auth_middleware import get_current_user
 from app.services.rbac_service import RoleChecker
+from app.workers.transaction_tasks import validate_transaction
 
 from fastapi import (APIRouter, HTTPException, Request, Response, status, Depends, Header)
 
@@ -66,6 +67,8 @@ def create_transaction_route(request: Request, response: Response, transaction: 
     try:
 
         transaction = create_transaction(db, transaction.customer_name, transaction.invoice_number, transaction.amount)
+
+        validate_transaction.delay(transaction.id)
 
         emit_event(event_name="TRANSACTION_CREATED", payload={"transaction_id": transaction.id, "invoice_number": transaction.invoice_number, "amount": transaction.amount})
 

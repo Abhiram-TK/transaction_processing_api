@@ -4,8 +4,10 @@ from app.database.connection import engine
 from app.database.connection import Base
 
 from app.models.transaction import Transaction
+from app.models.user import User
 
 from app.api.transaction_routes import router
+from app.api.auth_routes import router as auth_router
 
 from app.services.jwt_service import (create_access_token, decode_access_token)
 
@@ -18,6 +20,7 @@ app = FastAPI()
 
 logger.info("Application initialized")
 
+app.include_router(auth_router)
 app.include_router(router)
 
 Base.metadata.create_all(bind=engine)
