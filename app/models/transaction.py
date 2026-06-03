@@ -21,7 +21,7 @@ class Transaction(Base):
 
     amount = Column(Numeric, nullable=False)
 
-    status = Column(String, nullable=False)
+    status = Column(String, default="PENDING", nullable=False)
 
     created_at = Column(DateTime, default=datetime.utcnow)
 

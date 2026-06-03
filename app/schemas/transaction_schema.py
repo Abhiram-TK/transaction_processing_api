@@ -7,7 +7,6 @@ class TransactionCreate(BaseModel):
     customer_name: str = Field(..., min_length=2)
     invoice_number: str = Field(..., min_length=3)
     amount: float = Field(..., gt=0)
-    status: str = Field(..., min_length=2)
 
 class TransactionUpdate(BaseModel):
 

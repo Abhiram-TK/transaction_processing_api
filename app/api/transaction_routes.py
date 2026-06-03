@@ -65,7 +65,7 @@ def create_transaction_route(request: Request, response: Response, transaction: 
 
     try:
 
-        transaction = create_transaction(db, transaction.customer_name, transaction.invoice_number, transaction.amount, transaction.status)
+        transaction = create_transaction(db, transaction.customer_name, transaction.invoice_number, transaction.amount)
 
         emit_event(event_name="TRANSACTION_CREATED", payload={"transaction_id": transaction.id, "invoice_number": transaction.invoice_number, "amount": transaction.amount})
 

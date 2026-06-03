@@ -2,15 +2,19 @@ from sqlalchemy.orm import Session
 
 from app.models.transaction import Transaction
 
-def create_transaction(db: Session, customer_name, invoice_number, amount, status):
+def create_transaction(db: Session, customer_name, invoice_number, amount):
 
-    new_transaction = Transaction(customer_name=customer_name, invoice_number=invoice_number, amount=amount, status=status)
+    new_transaction = Transaction(customer_name=customer_name, invoice_number=invoice_number, amount=amount, status="PENDING")
 
     db.add(new_transaction)
 
     db.commit()
 
     db.refresh(new_transaction)
+
+    from app.workers.transaction_tasks import (validate_transaction)
+
+    validate_transaction.delay(new_transaction.id)
 
     return new_transaction
 
