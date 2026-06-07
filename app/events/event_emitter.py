@@ -11,4 +11,3 @@ def emit_event(event_name: str, payload: dict):
     with open("events.log", "a") as log_file:
 
         log_file.write(event_message)
-

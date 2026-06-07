@@ -56,6 +56,3 @@ def update_transactions(db: Session, transaction_id, customer_name, amount, stat
     db.refresh(transaction)
 
     return transaction
-
-
-

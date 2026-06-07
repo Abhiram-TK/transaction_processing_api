@@ -116,8 +116,3 @@ def update_transaction_route(transaction_id: int, transaction_update: Transactio
         raise HTTPException(status_code=400, detail="Invalid transaction update")
 
     return transaction
-
-
-
-
-

@@ -25,6 +25,4 @@ class Transaction(Base):
 
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    __table_args__ = (CheckConstraint("amount > 0", name="check_amount_positive"),)
-
-    
+    __table_args__ = (CheckConstraint("amount > 0", name="check_amount_positive"),) 
