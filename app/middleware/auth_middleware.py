@@ -22,4 +22,8 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
 
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
     
+    logger.info(f"TOKEN_VALIDATED | "
+    f"user_id={payload.get('user_id')} | "
+    f"role={payload.get('role')}")
+    
     return payload
