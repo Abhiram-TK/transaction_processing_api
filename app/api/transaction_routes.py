@@ -23,9 +23,20 @@ request_tracker = {}
 RATE_LIMIT = 5
 TIME_WINDOW = 60
 
-router = APIRouter()
+router = APIRouter(tags=["Transactions"])
 
-@router.post("/transactions",status_code=status.HTTP_201_CREATED, response_model=TransactionResponse, dependencies=[Depends(RoleChecker(["admin", "recruiter"]))])
+@router.post("/transactions",status_code=status.HTTP_201_CREATED, response_model=TransactionResponse, dependencies=[Depends(RoleChecker(["admin", "recruiter", "manager"]))],
+             summary="Create Transaction", description="""
+             Create a new financial transaction.
+             
+             Requires:
+             - Valid JWT
+             - Recruiter, Manager, or Admin role
+             
+             Triggers:
+             
+             - Event emission
+             - Async validation""")
 
 def create_transaction_route(request: Request, response: Response, transaction: TransactionCreate, idempotency_key: str = Header(...), 
                              db: Session = Depends(get_db), current_user = Depends(get_current_user)):
@@ -83,7 +94,18 @@ def create_transaction_route(request: Request, response: Response, transaction: 
         raise HTTPException(status_code=500, detail="Database operation failed")
         
 
-@router.get("/transactions", response_model=list[TransactionResponse], dependencies=[Depends(RoleChecker(["admin", "recruiter", "viewer"]))])
+@router.get("/transactions", response_model=list[TransactionResponse], dependencies=[Depends(RoleChecker(["admin", "recruiter", "viewer", "manager", "support", "auditor"]))],
+            summary="Get All Transactions", description="""
+             Get all transactions.
+             
+             Requires:
+             - Any Role
+             
+             Protected by:
+             - JWT Authentication
+             - RBAC Authorization
+             - Rate Limiting
+             - Idempotency Protection""")
 
 def fetch_all_transactions(response: Response, skip: int = 0, limit: int = 10, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
 
@@ -93,7 +115,18 @@ def fetch_all_transactions(response: Response, skip: int = 0, limit: int = 10, d
 
     return transactions
 
-@router.get("/transactions/{transaction_id}", response_model=TransactionDetailedResponse, dependencies=[Depends(RoleChecker(["admin", "recruiter", "viewer"]))])
+@router.get("/transactions/{transaction_id}", response_model=TransactionDetailedResponse, dependencies=[Depends(RoleChecker(["admin", "recruiter", "viewer", "manager",
+            "support", "auditor"]))], summary="Get Transaction By ID", description="""
+             Get transaction by ID.
+             
+             Requires:
+             - Any Role
+             
+             Protected by:
+             - JWT Authentication
+             - RBAC Authorization
+             - Rate Limiting
+             - Idempotency Protection""")
 
 def fetch_transaction(transaction_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
 
@@ -105,7 +138,19 @@ def fetch_transaction(transaction_id: int, db: Session = Depends(get_db), curren
 
     return {"transaction": transaction, "metadata": {"api_version": "1.0", "processed_by": "FastAPI Transaction Service", "timestamp": datetime.utcnow()}}
 
-@router.put("/transactions/{transaction_id}", response_model=TransactionResponse, dependencies=[Depends(RoleChecker(["admin"]))])
+@router.put("/transactions/{transaction_id}", response_model=TransactionResponse, dependencies=[Depends(RoleChecker(["admin", "manager"]))],
+            summary="Update Transaction", description="""
+             Update transaction.
+             
+             Requires:
+             - Admin
+             - Manager
+             
+             Protected by:
+             - JWT Authentication
+             - RBAC Authorization
+             - Rate Limiting
+             - Idempotency Protection""")
 
 def update_transaction_route(transaction_id: int, transaction_update: TransactionUpdate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
 
