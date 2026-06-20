@@ -86,7 +86,15 @@ def create_transaction_route(request: Request, response: Response, transaction: 
 
         validate_transaction.delay(transaction.id)
 
-        emit_event(event_name="TRANSACTION_CREATED", payload={"transaction_id": transaction.id, "invoice_number": transaction.invoice_number, "amount": transaction.amount})
+        emit_event(event_name="TRANSACTION_CREATED", payload={"transaction_id": transaction.id, "invoice_number": transaction.invoice_number, "product_id": transaction.product_id,
+                                                              "quantity": transaction.quantity})
+
+        logger.info(
+            f"TRANSACTION_CREATED | "
+            f"transaction_id={transaction.id} | "
+            f"invoice_number={transaction.invoice_number} | "
+            f"product_id={transaction.product_id} | "
+            f"quantity={transaction.quantity}")
 
         processed_requests[idempotency_key] = transaction
 
