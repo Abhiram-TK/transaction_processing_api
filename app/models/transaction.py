@@ -21,6 +21,10 @@ class Transaction(Base):
 
     customer_name = Column(String, nullable=False)
 
+    product_id = Column(Integer, nullable=True)
+
+    quantity = Column(Integer, nullable=True)
+
     invoice_number = Column(String, unique=True, nullable=False)
 
     amount = Column(Numeric, nullable=False)

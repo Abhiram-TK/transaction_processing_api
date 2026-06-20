@@ -18,3 +18,16 @@ def fetch_products(token: str):
     except requests.exceptions.RequestException as error:
 
         raise HTTPException(status_code=503, detail=f"Product service unavailable: {str(error)}")
+    
+    
+def fetch_product_by_id(product_id: int, token: str):
+
+    products = fetch_products(token)
+
+    for product in products:
+
+        if product["id"] == product_id:
+
+            return product
+
+    return None

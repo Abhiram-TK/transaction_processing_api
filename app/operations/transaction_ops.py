@@ -2,14 +2,28 @@ from sqlalchemy.orm import Session
 
 from app.models.transaction import Transaction
 
-def create_transaction(db: Session, customer_name, invoice_number, amount):
+from app.services.invoice_service import generate_invoice_number
+from app.services.product_service import fetch_product_by_id
 
-    new_transaction = Transaction(customer_name=customer_name, invoice_number=invoice_number, amount=amount, status="PENDING")
+def create_transaction(db: Session, customer_name, product_id, quantity, token):
+
+    product = fetch_product_by_id(product_id=product_id, token=token)
+
+    if not product:
+
+        raise Exception("Product not found")
+    
+    amount = product["price"] * quantity
+
+    new_transaction = Transaction(customer_name=customer_name, product_id=product_id, quantity=quantity, invoice_number="TEMP", amount=amount, status="PENDING")
 
     db.add(new_transaction)
+    db.commit()
+    db.refresh(new_transaction)
+
+    new_transaction.invoice_number = generate_invoice_number(new_transaction.id)
 
     db.commit()
-
     db.refresh(new_transaction)
 
     return new_transaction
@@ -48,7 +62,6 @@ def update_transactions(db: Session, transaction_id, customer_name, amount, stat
     transaction.status = status
 
     db.commit()
-
     db.refresh(transaction)
 
     return transaction

@@ -13,20 +13,21 @@ class TransactionStatus(str, Enum):
 class TransactionCreate(BaseModel):
 
     customer_name: str = Field(..., min_length=2)
-    invoice_number: str = Field(..., min_length=3)
-    amount: float = Field(..., gt=0)
+    product_id: int = Field(..., gt=0)
+    quantity: int = Field(..., gt=0)
 
 class TransactionUpdate(BaseModel):
 
     customer_name: Optional[str] = Field(None, min_length=2)
-    invoice_number: Optional[str] = Field(None, min_length=3)
-    amount: Optional[float] = Field(None, gt=0)
+    quantity: Optional[int] = Field(None, gt=0)
     status: Optional[str] = Field(None, min_length=2)
 
 class TransactionResponse(BaseModel):
 
     id: int
     customer_name: str
+    product_id: int | None = None
+    quantity: int | None = None
     invoice_number: str
     amount: float
     status: TransactionStatus   

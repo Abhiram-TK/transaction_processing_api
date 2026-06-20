@@ -3,6 +3,10 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 
+from fastapi import (APIRouter, HTTPException, Request, Response, status, Depends, Header)
+
+from app.core.logger import logger
+
 from app.database.connection import get_db
 from app.events.event_emitter import emit_event
 from app.operations.transaction_ops import (create_transaction, get_all_transactions, get_transaction_by_id, update_transactions)
@@ -11,10 +15,6 @@ from app.schemas.transaction_schema import (TransactionCreate, TransactionUpdate
 from app.services.rbac_service import RoleChecker
 from app.services.permission_checker import PermissionChecker
 from app.workers.transaction_tasks import validate_transaction
-
-from fastapi import (APIRouter, HTTPException, Request, Response, status, Depends, Header)
-
-from app.core.logger import logger
 
 
 processed_requests = {}
@@ -78,7 +78,11 @@ def create_transaction_route(request: Request, response: Response, transaction: 
 
     try:
 
-        transaction = create_transaction(db, transaction.customer_name, transaction.invoice_number, transaction.amount)
+        authorization_header = request.headers.get("Authorization")
+
+        token = authorization_header.replace("Bearer ", "")
+
+        transaction = create_transaction(db=db, customer_name=transaction.customer_name, product_id=transaction.product_id, quantity=transaction.quantity, token=token)
 
         validate_transaction.delay(transaction.id)
 

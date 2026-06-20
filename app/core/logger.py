@@ -1,7 +1,7 @@
 import logging
 
 
-logger = logging.getLogger("transaction_api")
+logger = logging.getLogger("sales_transaction_service")
 
 logger.setLevel(logging.INFO)
 
