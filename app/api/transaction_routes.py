@@ -15,6 +15,7 @@ from app.schemas.transaction_schema import (TransactionCreate, TransactionUpdate
 from app.services.rbac_service import RoleChecker
 from app.services.permission_checker import PermissionChecker
 from app.services.inventory_service import (create_inventory_reservation)
+from app.services.reservation_service import (fetch_reservation_status)
 
 from app.workers.transaction_tasks import validate_transaction
 
@@ -146,15 +147,29 @@ def fetch_all_transactions(response: Response, skip: int = 0, limit: int = 10, d
              - Rate Limiting
              - Idempotency Protection""")
 
-def fetch_transaction(transaction_id: int, db: Session = Depends(get_db)):
+def fetch_transaction(transaction_id: int, request: Request, db: Session = Depends(get_db)):
 
     transaction = get_transaction_by_id(db, transaction_id)
 
     if not transaction:
 
         raise HTTPException(status_code=404, detail="Transaction not found")
+    
+    authorization_header = request.headers.get("Authorization")
 
-    return {"transaction": transaction, "metadata": {"api_version": "1.0", "processed_by": "FastAPI Transaction Service", "timestamp": datetime.utcnow()}}
+    token = authorization_header.replace("Bearer ", "")
+
+    reservation = fetch_reservation_status(transaction_id=transaction.id, token=token)
+
+    reservation_status = None
+
+    if reservation:
+
+        reservation_status = reservation["status"]
+
+    return {"transaction_id": transaction.id, "customer_name": transaction.customer_name, "product_id": transaction.product_id, "quantity": transaction.quantity, "invoice_number": transaction.invoice_number,
+            "amount": float(transaction.amount), "status": transaction.status.value, "reservation_status": reservation_status, "created_at": transaction.created_at, "updated_at": transaction.updated_at,
+            "validated_at": transaction.validated_at}
 
 @transaction_router.put("/transactions/{transaction_id}", response_model=TransactionResponse, dependencies=[Depends(RoleChecker(["admin", "manager"]))],
             summary="Update Transaction", description="""

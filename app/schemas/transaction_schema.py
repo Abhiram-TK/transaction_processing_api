@@ -45,5 +45,14 @@ class TransactionMetadata(BaseModel):
 
 class TransactionDetailedResponse(BaseModel):
 
-    transaction: TransactionResponse
-    metadata: TransactionMetadata
+    transaction_id: int
+    customer_name: str
+    product_id: int
+    quantity: int
+    invoice_number: str
+    amount: float
+    status: TransactionStatus
+    reservation_status: str | None = None
+    created_at: datetime
+    updated_at: datetime | None = None
+    validated_at: datetime | None = None

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from app.workers.celery_app import celery_app
 
 from app.database.connection import SessionLocal
@@ -40,9 +42,13 @@ def validate_transaction(transaction_id):
 
             transaction.status = "VALIDATED"
 
+            transaction.validated_at = datetime.utcnow()
+
         else:
 
             transaction.status = "FAILED"
+
+            transaction.updated_at = datetime.utcnow()
 
         db.commit()
 

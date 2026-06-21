@@ -33,4 +33,8 @@ class Transaction(Base):
 
     created_at = Column(DateTime, default=datetime.utcnow)
 
+    updated_at = Column(DateTime, nullable=True)
+
+    validated_at = Column(DateTime, nullable=True)
+
     __table_args__ = (CheckConstraint("amount > 0", name="check_amount_positive"),) 

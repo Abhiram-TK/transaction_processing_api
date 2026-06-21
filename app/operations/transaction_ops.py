@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy.orm import Session
 
 from app.models.transaction import Transaction
@@ -60,6 +62,8 @@ def update_transactions(db: Session, transaction_id, customer_name, amount, stat
     transaction.amount = amount
 
     transaction.status = status
+
+    transaction.updated_at = datetime.utcnow()
 
     db.commit()
     db.refresh(transaction)
