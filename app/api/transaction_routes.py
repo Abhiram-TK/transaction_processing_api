@@ -14,6 +14,8 @@ from app.schemas.transaction_schema import (TransactionCreate, TransactionUpdate
 
 from app.services.rbac_service import RoleChecker
 from app.services.permission_checker import PermissionChecker
+from app.services.inventory_service import (create_inventory_reservation)
+
 from app.workers.transaction_tasks import validate_transaction
 
 
@@ -86,8 +88,11 @@ def create_transaction_route(request: Request, response: Response, transaction: 
 
         validate_transaction.delay(transaction.id)
 
-        emit_event(event_name="TRANSACTION_CREATED", payload={"transaction_id": transaction.id, "invoice_number": transaction.invoice_number, "product_id": transaction.product_id,
-                                                              "quantity": transaction.quantity})
+        event_payload = {"transaction_id": transaction.id, "invoice_number": transaction.invoice_number, "product_id": transaction.product_id, "quantity": transaction.quantity}
+
+        emit_event(event_name="TRANSACTION_CREATED", payload=event_payload)
+
+        create_inventory_reservation(payload=event_payload, token=token)
 
         logger.info(
             f"TRANSACTION_CREATED | "
