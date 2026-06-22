@@ -12,7 +12,6 @@ from app.events.event_emitter import emit_event
 from app.operations.transaction_ops import (create_transaction, get_all_transactions, get_transaction_by_id, update_transactions)
 from app.schemas.transaction_schema import (TransactionCreate, TransactionUpdate, TransactionResponse, TransactionMetadata, TransactionDetailedResponse)
 
-from app.services.rbac_service import RoleChecker
 from app.services.permission_checker import PermissionChecker
 from app.services.inventory_service import (create_inventory_reservation)
 from app.services.reservation_service import (fetch_reservation_status)
@@ -31,16 +30,13 @@ transaction_router = APIRouter(tags=["Transactions"])
 
 @transaction_router.post("/transactions",status_code=status.HTTP_201_CREATED, response_model=TransactionResponse, dependencies=[Depends(PermissionChecker(["create_transactions"]))],
              summary="Create Transaction", description="""
-             Create a new financial transaction.
+             Create a mew sales transaction.
              
              Requires:
-             - Valid JWT
-             - Recruiter, Manager, or Admin role
+
+             - create_transactions permission
              
-             Triggers:
-             
-             - Event emission
-             - Async validation""")
+             Returns transaction details with generated invoice number.""")
 
 def create_transaction_route(request: Request, response: Response, transaction: TransactionCreate, idempotency_key: str = Header(...), 
                              db: Session = Depends(get_db)):
@@ -113,18 +109,15 @@ def create_transaction_route(request: Request, response: Response, transaction: 
         raise HTTPException(status_code=500, detail="Database operation failed")
         
 
-@transaction_router.get("/transactions", response_model=list[TransactionResponse], dependencies=[Depends(RoleChecker(["admin", "recruiter", "viewer", "manager", "support", "auditor"]))],
+@transaction_router.get("/transactions", response_model=list[TransactionResponse], dependencies=[Depends(PermissionChecker["view_transactions"])],
             summary="Get All Transactions", description="""
-             Get all transactions.
+            Retrieve all transactions.
              
-             Requires:
-             - Any Role
-             
-             Protected by:
-             - JWT Authentication
-             - RBAC Authorization
-             - Rate Limiting
-             - Idempotency Protection""")
+            Requires:
+
+            - view_transactions permission
+
+            Returns transaction records with invoice and status information.""")
 
 def fetch_all_transactions(response: Response, skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
 
@@ -134,18 +127,15 @@ def fetch_all_transactions(response: Response, skip: int = 0, limit: int = 10, d
 
     return transactions
 
-@transaction_router.get("/transactions/{transaction_id}", response_model=TransactionDetailedResponse, dependencies=[Depends(RoleChecker(["admin", "recruiter", "viewer", "manager",
-            "support", "auditor"]))], summary="Get Transaction By ID", description="""
-             Get transaction by ID.
+@transaction_router.get("/transactions/{transaction_id}", response_model=TransactionDetailedResponse, dependencies=[Depends(PermissionChecker["view_transactions"])],
+                        summary="Get Transaction By ID", description="""
+                        Retrieve transaction details by ID.
              
-             Requires:
-             - Any Role
-             
-             Protected by:
-             - JWT Authentication
-             - RBAC Authorization
-             - Rate Limiting
-             - Idempotency Protection""")
+                        Requires:
+
+                        - view_transactions permission
+
+                        Returns transaction, reservation status, and lifecycle timestamps.""")
 
 def fetch_transaction(transaction_id: int, request: Request, db: Session = Depends(get_db)):
 
@@ -171,19 +161,15 @@ def fetch_transaction(transaction_id: int, request: Request, db: Session = Depen
             "amount": float(transaction.amount), "status": transaction.status.value, "reservation_status": reservation_status, "created_at": transaction.created_at, "updated_at": transaction.updated_at,
             "validated_at": transaction.validated_at}
 
-@transaction_router.put("/transactions/{transaction_id}", response_model=TransactionResponse, dependencies=[Depends(RoleChecker(["admin", "manager"]))],
+@transaction_router.put("/transactions/{transaction_id}", response_model=TransactionResponse, dependencies=[Depends(PermissionChecker["update_transactions"])],
             summary="Update Transaction", description="""
-             Update transaction.
+             Update an existing transaction.
              
              Requires:
-             - Admin
-             - Manager
-             
-             Protected by:
-             - JWT Authentication
-             - RBAC Authorization
-             - Rate Limiting
-             - Idempotency Protection""")
+
+             - update_transactions permission
+
+            Returns updated transaction information.""")
 
 def update_transaction_route(transaction_id: int, transaction_update: TransactionUpdate, db: Session = Depends(get_db)):
 

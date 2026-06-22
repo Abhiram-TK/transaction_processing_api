@@ -49,7 +49,15 @@ def home():
 
     return {"message": "Transaction Processing API Running"}
 
-@app.get("/health", tags=["System"], summary="Health Check")
+@app.get("/health", tags=["System"], summary="Health Check", description="""
+         Verify that the Sales Transaction Service is running.
+
+        Used for:
+
+        - Service health validation
+        - Deployment verification
+        - Monitoring checks""")
+
 def health_check():
 
     db = SessionLocal()
