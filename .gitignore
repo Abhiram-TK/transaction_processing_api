@@ -1,7 +1,28 @@
-venv/
-__pycache__/
-*.pyc
+# Environment
 .env
+
+# Virtual Environment
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Logs
 logs/
 *.log
+
+# IDE
 .vscode/
+.idea/ 
+
+# Test Cache
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Operating System
+.DS_Store
+Thumbs.db
